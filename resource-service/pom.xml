@@ -15,7 +15,7 @@
 	<name>resource-service</name>
 	<description>Demo Resource Service</description>
 	<properties>
-		<java.version>24</java.version>
+		<java.version>21</java.version>
 	</properties>
 	<dependencies>
 		<dependency>

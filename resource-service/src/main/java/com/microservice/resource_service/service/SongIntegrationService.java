@@ -31,7 +31,7 @@ public class SongIntegrationService {
                 .uri("/songs")
                 .body(songDto)
                 .retrieve()
-                .onStatus(HttpStatusCode::isError, ((_, _) -> {
+                .onStatus(HttpStatusCode::isError, ((request, response) -> {
                     throw new InternalServerErrorException("Error occurred when creating song");
                 }))
                 .body(AddSongResponse.class);
@@ -46,7 +46,7 @@ public class SongIntegrationService {
         DeleteSongResponse deleteSongResponse = restClient.delete()
                 .uri("/songs?id=" + queryParam)
                 .retrieve()
-                .onStatus(HttpStatusCode::isError, ((_, _) -> {
+                .onStatus(HttpStatusCode::isError, ((request, response) -> {
                     throw new InternalServerErrorException("Error occurred when deleting song");
                 }))
                 .body(DeleteSongResponse.class);

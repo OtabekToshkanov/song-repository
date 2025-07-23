@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class Song {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
     @Column
     private String name;

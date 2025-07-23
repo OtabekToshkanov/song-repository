@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Data
 public class Resource {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @Lob

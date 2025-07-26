@@ -4,6 +4,7 @@ import com.microservice.resource_service.dto.SongDto;
 import com.microservice.resource_service.excpetion.InternalServerErrorException;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -14,6 +15,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class SongIntegrationService {
+    private final LoadBalancerClient loadBalancerClient;
     private final RestClient restClient;
 
     @Data
@@ -28,7 +30,7 @@ public class SongIntegrationService {
 
     public int addSong(SongDto songDto) {
         AddSongResponse songServiceResponse = restClient.post()
-                .uri("/songs")
+                .uri(getSongServiceUri() + "/songs")
                 .body(songDto)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, ((request, response) -> {
@@ -44,7 +46,7 @@ public class SongIntegrationService {
         var queryParam = String.join(",", ids.stream().map(String::valueOf).toList());
 
         DeleteSongResponse deleteSongResponse = restClient.delete()
-                .uri("/songs?id=" + queryParam)
+                .uri(getSongServiceUri() + "/songs?id=" + queryParam)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, ((request, response) -> {
                     throw new InternalServerErrorException("Error occurred when deleting song");
@@ -53,5 +55,15 @@ public class SongIntegrationService {
 
         assert deleteSongResponse != null;
         return deleteSongResponse.getIds();
+    }
+
+    private String getSongServiceUri() {
+        var songInstance = loadBalancerClient.choose("song-service");
+
+        if (songInstance == null) {
+            throw new InternalServerErrorException("Error occurred when creating song. Song service is not available");
+        }
+
+        return songInstance.getUri().toString();
     }
 }

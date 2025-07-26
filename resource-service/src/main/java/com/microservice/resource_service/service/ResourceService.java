@@ -31,6 +31,7 @@ public class ResourceService {
         repository.save(resource);
 
         SongDto songDto = mp3ParserService.readSongMetadata(body);
+        songDto.setId(resource.getId());
         int songId = songIntegrationService.addSong(songDto);
 
         if (songId != resource.getId()) {

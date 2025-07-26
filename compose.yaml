@@ -23,6 +23,15 @@ services:
       - ./init-scripts/song-db/init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
 
+  discovery-service:
+    build:
+      context: ./eureka-service-discovery
+    environment:
+      DISCOVERY_SERVICE_RESPONSE_CACHE_INTERVAL_IN_MS: ${DISCOVERY_SERVICE_RESPONSE_CACHE_INTERVAL_IN_MS}
+    ports:
+      - "8761:8761"
+    restart: on-failure
+
   resource-service:
     build:
       context: ./resource-service
@@ -30,11 +39,15 @@ services:
       SPRING_DATASOURCE_URL: ${RESOURCE_DB_URL}
       SPRING_DATASOURCE_USERNAME: ${RESOURCE_DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${RESOURCE_DB_PASSWORD}
-      SONG_SERVICE_URL: ${SONG_SERVICE_URL}
+      DISCOVERY_SERVICE_URL: ${DISCOVERY_SERVICE_URL}
+      DISCOVERY_FETCH_INTERVAL_IN_SECONDS: ${DISCOVERY_FETCH_INTERVAL_IN_SECONDS}
+      DISCOVERY_LEASE_RENEWAL_INTERVAL_IN_SECONDS: ${DISCOVERY_LEASE_RENEWAL_INTERVAL_IN_SECONDS}
+      DISCOVERY_LEASE_EXPIRATION_DURATION_IN_SECONDS: ${DISCOVERY_LEASE_EXPIRATION_DURATION_IN_SECONDS}
     ports:
       - "8080:8080"
     depends_on:
       - resource-db
+      - discovery-service
     restart: on-failure
 
   song-service:
@@ -44,8 +57,15 @@ services:
       SPRING_DATASOURCE_URL: ${SONG_DB_URL}
       SPRING_DATASOURCE_USERNAME: ${SONG_DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${SONG_DB_PASSWORD}
+      DISCOVERY_SERVICE_URL: ${DISCOVERY_SERVICE_URL}
+      DISCOVERY_FETCH_INTERVAL_IN_SECONDS: ${DISCOVERY_FETCH_INTERVAL_IN_SECONDS}
+      DISCOVERY_LEASE_RENEWAL_INTERVAL_IN_SECONDS: ${DISCOVERY_LEASE_RENEWAL_INTERVAL_IN_SECONDS}
+      DISCOVERY_LEASE_EXPIRATION_DURATION_IN_SECONDS: ${DISCOVERY_LEASE_EXPIRATION_DURATION_IN_SECONDS}
+    deploy:
+      replicas: 2
     ports:
-      - "8081:8081"
+      - "8081-8082:8081"
     depends_on:
       - song-db
+      - discovery-service
     restart: on-failure

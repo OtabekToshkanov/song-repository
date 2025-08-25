@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>com.microservice</groupId>
 	<artifactId>resource-service</artifactId>
-	<version>0.0.3-SNAPSHOT</version>
+	<version>0.0.4-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>resource-service</name>
 	<description>Demo Resource Service</description>
@@ -63,7 +63,13 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
-	</dependencies>
+
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk</artifactId>
+            <version>1.12.788</version>
+        </dependency>
+    </dependencies>
 
 	<dependencyManagement>
 		<dependencies>

@@ -1,6 +1,5 @@
 package com.microservice.resource_service.service;
 
-import com.microservice.resource_service.dto.SongDto;
 import com.microservice.resource_service.excpetion.BadRequestException;
 import com.microservice.resource_service.excpetion.InternalServerErrorException;
 import com.microservice.resource_service.excpetion.ResourceNotFoundException;
@@ -11,6 +10,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.LinkedList;
 import java.util.List;
 
 @Service
@@ -18,8 +18,7 @@ import java.util.List;
 public class ResourceService {
     private final Validator validator;
     private final ResourceRepository repository;
-    private final Mp3ParserService mp3ParserService;
-    private final SongIntegrationService songIntegrationService;
+    private final S3Service s3Service;
 
     @Transactional
     public Integer createResource(String contentType, byte[] body) {
@@ -27,16 +26,10 @@ public class ResourceService {
             throw new BadRequestException(String.format("Invalid file format: %s. Only MP3 files are allowed", contentType));
         }
 
-        Resource resource = new Resource(body);
+        var resourceLocation = s3Service.uploadFile(body, contentType);
+
+        Resource resource = new Resource(resourceLocation);
         repository.save(resource);
-
-        SongDto songDto = mp3ParserService.readSongMetadata(body);
-        songDto.setId(resource.getId());
-        int songId = songIntegrationService.addSong(songDto);
-
-        if (songId != resource.getId()) {
-            throw new InternalServerErrorException("Error occurred when creating song");
-        }
 
         return resource.getId();
     }
@@ -46,7 +39,7 @@ public class ResourceService {
         var song = repository.findById(validatedId);
 
         if (song.isPresent()) {
-            return song.get().getResourceData();
+            return s3Service.downloadFile(song.get().getResourceLocation());
         }
 
         throw new ResourceNotFoundException(String.format("Resource with ID=%d not found", validatedId));
@@ -56,13 +49,15 @@ public class ResourceService {
         var validatedIds = validator.validateIds(ids);
 
         List<Resource> resources = repository.findAllById(validatedIds);
-        var existingResourceIds = resources.stream().map(Resource::getId).toList();
+        LinkedList<Integer> filteredIds = new LinkedList<>();
 
-        var songServiceDeletedIds = songIntegrationService.deleteSongById(validatedIds);
-
-        var filteredIds = existingResourceIds.stream()
-                .filter(songServiceDeletedIds::contains)
-                .toList();
+        resources.forEach(resource -> {
+            try {
+                s3Service.deleteFile(resource.getResourceLocation());
+                filteredIds.add(resource.getId());
+            } catch (InternalServerErrorException ignored) {
+            }
+        });
 
         repository.deleteAllByIdInBatch(filteredIds);
         return filteredIds;

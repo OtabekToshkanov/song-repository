@@ -23,6 +23,14 @@ services:
       - ./init-scripts/song-db/init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
 
+  localstack:
+    image: localstack/localstack:latest
+    environment:
+      - SERVICES=s3
+    ports:
+      - "4566:4566"
+    restart: unless-stopped
+
   discovery-service:
     build:
       context: ./eureka-service-discovery

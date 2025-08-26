@@ -11,6 +11,8 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class AwsConfig {
+    @Value("${cloud.aws.url}")
+    private String url;
     @Value("${cloud.aws.region}")
     private String region;
     @Value("${cloud.aws.s3.bucket}")
@@ -23,9 +25,7 @@ public class AwsConfig {
     @Bean
     public AmazonS3 s3Client() {
         var s3client = AmazonS3ClientBuilder.standard()
-                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(
-                        "http://localhost:4566",
-                        region))
+                .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(url, region))
                 .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey)))
                 .withPathStyleAccessEnabled(true)
                 .build();

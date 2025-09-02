@@ -1,8 +1,8 @@
-package com.microservice.resource_service.service;
+package com.microservice.resource_processor.service;
 
-import com.microservice.resource_service.dto.SongDto;
-import com.microservice.resource_service.excpetion.BadRequestException;
-import com.microservice.resource_service.excpetion.InternalServerErrorException;
+import com.microservice.resource_processor.dto.SongDto;
+import com.microservice.resource_processor.excpetion.BadRequestException;
+import com.microservice.resource_processor.excpetion.InternalServerErrorException;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;

@@ -42,6 +42,16 @@ services:
       - "8761:8761"
     restart: on-failure
 
+  rabbit-mq:
+    image: rabbitmq:4.1.3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASSWORD}
+    restart: unless-stopped
+
   resource-service:
     build:
       context: ./resource-service
@@ -64,6 +74,7 @@ services:
       - resource-db
       - discovery-service
       - localstack
+      - rabbit-mq
     restart: on-failure
 
   resource-processor:
@@ -78,6 +89,8 @@ services:
       - "8083:8083"
     depends_on:
       - discovery-service
+      - resource-service
+      - rabbit-mq
     restart: on-failure
 
   song-service:
@@ -98,4 +111,5 @@ services:
     depends_on:
       - song-db
       - discovery-service
+      - resource-processor
     restart: on-failure

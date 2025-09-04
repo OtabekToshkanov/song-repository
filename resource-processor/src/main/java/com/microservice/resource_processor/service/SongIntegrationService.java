@@ -1,6 +1,7 @@
-package com.microservice.resource_service.service;
+package com.microservice.resource_processor.service;
 
-import com.microservice.resource_service.excpetion.InternalServerErrorException;
+import com.microservice.resource_processor.dto.SongDto;
+import com.microservice.resource_processor.excpetion.InternalServerErrorException;
 import io.github.resilience4j.retry.annotation.Retry;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -10,9 +11,6 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
-import java.util.List;
-
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -21,27 +19,28 @@ public class SongIntegrationService {
     private final RestClient restClient;
 
     @Data
-    public static class DeleteSongResponse {
-        private List<Integer> ids;
+    public static class AddSongResponse {
+        private int id;
     }
 
-    @Retry(name = "song-integration", fallbackMethod = "deleteSongFallback")
-    public void deleteSongById(List<Integer> ids) {
-        var queryParam = String.join(",", ids.stream().map(String::valueOf).toList());
-
-        DeleteSongResponse deleteSongResponse = restClient.delete()
-                .uri(getSongServiceUri() + "/songs?id=" + queryParam)
+    @Retry(name = "song-integration", fallbackMethod = "addSongFallback")
+    public void addSong(SongDto songDto) {
+        AddSongResponse songServiceResponse = restClient.post()
+                .uri(getSongServiceUri() + "/songs")
+                .body(songDto)
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, ((request, response) -> {
-                    throw new InternalServerErrorException("Error occurred when deleting song");
+                    System.out.println("A"+new String(response.getBody().readAllBytes()));
+                    System.out.println(response.getStatusCode());
+                    throw new InternalServerErrorException("Error occurred when creating song");
                 }))
-                .body(DeleteSongResponse.class);
+                .body(AddSongResponse.class);
 
-        assert deleteSongResponse != null;
+        assert songServiceResponse != null;
     }
 
-    public void deleteSongFallback(List<Integer> ids, Exception ex) {
-        log.error("Failed to delete song", ex);
+    public void addSongFallback(SongDto songDto, Exception ex) {
+        log.error("Failed to add song", ex);
     }
 
     private String getSongServiceUri() {

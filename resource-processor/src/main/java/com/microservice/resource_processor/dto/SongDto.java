@@ -8,6 +8,7 @@ import lombok.ToString;
 @Builder
 @ToString
 public class SongDto {
+    private int id;
     private String name;
     private String artist;
     private String album;

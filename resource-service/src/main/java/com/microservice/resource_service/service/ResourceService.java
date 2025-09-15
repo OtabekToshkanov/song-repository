@@ -19,6 +19,8 @@ public class ResourceService {
     private final Validator validator;
     private final ResourceRepository repository;
     private final S3Service s3Service;
+    private final RabbitMQService rabbitMQService;
+    private final SongIntegrationService songIntegrationService;
 
     @Transactional
     public Integer createResource(String contentType, byte[] body) {
@@ -30,6 +32,8 @@ public class ResourceService {
 
         Resource resource = new Resource(resourceLocation);
         repository.save(resource);
+
+        rabbitMQService.sendMessageAsync(resource.getId());
 
         return resource.getId();
     }
@@ -58,6 +62,8 @@ public class ResourceService {
             } catch (InternalServerErrorException ignored) {
             }
         });
+
+        songIntegrationService.deleteSongById(filteredIds);
 
         repository.deleteAllByIdInBatch(filteredIds);
         return filteredIds;
